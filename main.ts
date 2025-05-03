@@ -287,6 +287,9 @@ class urlModal extends Modal {
 		// Create the file and open it
 		await this.app.vault.create(
 			pathToFile,
+			"---\nannotation-target: " +
+			(url.endsWith('.pdf') ? url : url + '.pdf') +
+			"\n---\n" +
 			"# Title" +
 			"\n" +
 			trimString(title) +
