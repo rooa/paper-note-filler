@@ -29,6 +29,7 @@ const NAMING_TYPES: string[] = [
 
 const DEFAULT_SETTINGS: PaperNoteFillerPluginSettings = {
 	folderLocation: "",
+	indexLocation: "",
 	fileNaming: NAMING_TYPES[0],
 	openAIKey: "N/A",
 	openAIModel: "gpt-4o-mini",
@@ -66,6 +67,8 @@ const STRING_MAP: Map<string, string> = new Map([
 	["settingFolderName", "Folder"],
 	["settingFolderDesc", "Folder to create paper notes in."],
 	["settingFolderRoot", "(root of the vault)"],
+	["settingIndexName", "Index"],
+	["settingIndexDesc", "File to create the index in."],
 	["settingNoteName", "Note naming"],
 	["settingNoteDesc", "Method to name the note."],
 	["settingOpenAIName", "OpenAI key"],
@@ -88,6 +91,7 @@ function trimString(str: string | null): string {
 
 interface PaperNoteFillerPluginSettings {
 	folderLocation: string;
+	indexLocation: string;
 	fileNaming: string;
 	openAIKey: string;
 	openAIModel: string;
@@ -322,6 +326,18 @@ class urlModal extends Modal {
 			"\n" +
 			"- " + futureWork
 		)
+
+		if (this.settings.indexLocation != "") {
+			const indexFile = `${this.settings.indexLocation}.md`;
+			const relativePathToFile = pathToFile.replace(this.settings.folderLocation + path.sep, "").replace(".md", "");
+			try {
+				const existingContent = await this.app.vault.adapter.read(indexFile);
+				await this.app.vault.adapter.write(indexFile, existingContent + `\n- [[${relativePathToFile}]]\n`);
+			} catch {
+				await this.app.vault.create(indexFile, `# Papers\n - [[${relativePathToFile}]]\n`);
+			}
+		}
+
 		await this.app.workspace.openLinkText(pathToFile, pathToFile);
 	}
 
@@ -525,6 +541,19 @@ class SettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.folderLocation)
 					.onChange(async (value) => {
 						this.plugin.settings.folderLocation = value;
+						await this.plugin.saveSettings();
+					})
+			);
+
+		//1. Setting: Index file (optional)
+		new Setting(containerEl)
+			.setName(STRING_MAP.get("settingIndexName")!)
+			.setDesc(STRING_MAP.get("settingIndexDesc")!)
+			.addText((text) =>
+				text
+					.setValue(this.plugin.settings.indexLocation)
+					.onChange(async (value) => {
+						this.plugin.settings.indexLocation = value;
 						await this.plugin.saveSettings();
 					})
 			);
