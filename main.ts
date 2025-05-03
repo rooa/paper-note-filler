@@ -388,7 +388,7 @@ class urlModal extends Modal {
 	}
 
 	extractFromArxiv(url: string) {
-		const id = this.getIdentifierFromUrl(url);
+		const id = this.getIdentifierFromUrl(url.replace(/\.pdf$/, ''));
 
 		fetch(STRING_MAP.get("arXivRestAPI")! + id)
 			.then((response) => response.text())
